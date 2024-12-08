@@ -1,0 +1,378 @@
+-- spindash testing: instant mode
+wait(0.5)
+local p = game.Players.LocalPlayer
+local c = p.Character
+local hrp = c.HumanoidRootPart
+local h = c.Humanoid
+local animator = h:WaitForChild("Animator")
+local pgui = p:WaitForChild("PlayerGui")
+local wait = task.wait
+local uis = game:GetService("UserInputService")
+local speed = 145
+local x = 0
+local sdCooldown = false
+local cdval = 0
+
+local spindashactive = false
+local canCharge = false
+
+-- detection for if it's already executed
+if pgui:FindFirstChild("spindashChargeGui") then
+pgui:FindFirstChild("spindashChargeGui"):Destroy()
+local notifSound = Instance.new("Sound",workspace)
+notifSound.PlaybackSpeed = 0.65
+notifSound.Volume = 0.23
+notifSound.SoundId = "rbxassetid://170765130"
+notifSound.PlayOnRemove = true
+notifSound:Destroy()
+game.StarterGui:SetCore("SendNotification", {Title = "what", Text = "hey uh you don't gotta execute it again. its fixed", Icon = "rbxassetid://7203597891", Duration = 1.6})
+else
+local notifSound = Instance.new("Sound",workspace)
+notifSound.PlaybackSpeed = 0.65
+notifSound.Volume = 0.23
+notifSound.SoundId = "rbxassetid://170765130"
+notifSound.PlayOnRemove = true
+notifSound:Destroy()
+game.StarterGui:SetCore("SendNotification", {Title = "it's loaded", Text = "don't be surprised if the cd kinda lingers, dunno how to fix it", Icon = "rbxassetid://7203597891", Duration = 3.5})
+local speed = 145
+local x = 0
+local sdCooldown = false
+local cdval = 0
+local spindashactive = false
+local canCharge = false
+end
+
+-- GUI
+local sdgui = Instance.new("ScreenGui", pgui)
+sdgui.Name = "spindashChargeGui"
+local frame = Instance.new("Frame", sdgui)
+frame.Name = "abilityIcons"
+local ratio = Instance.new("UIAspectRatioConstraint", frame)
+ratio.Name = "aspectRatio"
+local buttonIcon = Instance.new("ImageLabel", frame)
+buttonIcon.Name = "icon"
+local buttonRing = Instance.new("ImageLabel", frame)
+buttonRing.Name = "ring"
+local buttonBlood = Instance.new("ImageLabel", frame)
+buttonBlood.Name = "blood"
+local buttonText = Instance.new("TextLabel", frame)
+buttonText.Name = "text"
+local buttonCD = Instance.new("TextLabel", frame)
+buttonCD.Name = "cd"
+local cdBG = Instance.new("ImageLabel", frame)
+cdBG.Name = "cdBG"
+local keyImage = Instance.new("ImageLabel", frame)
+keyImage.Name = "bind"
+local keyBg = Instance.new("ImageLabel", frame)
+keyBg.Name = "bindBg"
+--
+sdgui.ResetOnSpawn = false
+--
+frame.Position = UDim2.new(0.800000012, 0, 0.649999976, 0)
+frame.Size = UDim2.new(0.0822882429, 0, 0.137406483, 0)
+frame.BackgroundTransparency = 1
+ratio.AspectRatio = 1
+ratio.AspectType = Enum.AspectType.FitWithinMaxSize
+ratio.DominantAxis = Enum.DominantAxis.Height
+--
+buttonIcon.Size = UDim2.new(0.646335125, 0, 0.656335125, 0)
+buttonIcon.Position = UDim2.new(2.166619241, 0, -1.97999768, 0)
+buttonIcon.BackgroundTransparency = 1
+buttonIcon.Image = "rbxassetid://18426815197"
+buttonIcon.ZIndex = 2
+buttonIcon.ImageTransparency = 0.16
+--
+buttonRing.Size = UDim2.new(0.976400435, 0, 0.996400435, 0)
+buttonRing.Position = UDim2.new(1.996619241, 0, -2.149999768, 0)
+buttonRing.BackgroundTransparency = 1
+buttonRing.Image = "rbxassetid://16717211149"
+buttonRing.ImageColor3 = Color3.fromRGB(170, 0, 0)
+buttonRing.ZIndex = 1
+--
+buttonBlood.Size = UDim2.new(1.63846564, 0, 1.63846564, 0)
+buttonBlood.Position = UDim2.new(1.5910168, 0, -2.468237172, 0)
+buttonBlood.BackgroundTransparency = 1
+buttonBlood.Image = "rbxassetid://9685348010"
+buttonBlood.ImageTransparency = 0.4
+buttonBlood.ImageColor3 = Color3.fromRGB(0, 0, 0)
+buttonBlood.ZIndex = -2
+--
+buttonText.Size = UDim2.new(0, 200, 0, 11)
+buttonText.Position = UDim2.new(1.34, 0, -2.109999768, 0)
+buttonText.BackgroundTransparency = 1
+buttonText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+buttonText.TextStrokeTransparency = 0
+buttonText.Text = "SPINDASH"
+buttonText.Font = Enum.Font.Arcade
+buttonText.TextSize = 14
+buttonText.TextColor3 = Color3.fromRGB(255, 255, 255)
+buttonText.ZIndex = 2
+--
+buttonCD.Size = UDim2.new(0, 200, 0, 11)
+buttonCD.Position = UDim2.new(1.35, 0, -1.719999768, 0)
+buttonCD.BackgroundTransparency = 1
+buttonCD.TextStrokeColor3 = Color3.fromRGB(85, 0, 0)
+buttonCD.TextStrokeTransparency = 0
+buttonCD.Text = cdval
+buttonCD.Font = Enum.Font.Arcade
+buttonCD.TextSize = 21
+buttonCD.TextColor3 = Color3.fromRGB(255, 255, 255)
+buttonCD.ZIndex = 4
+buttonCD.TextScaled = true
+--
+cdBG.Size = UDim2.new(1.26, 0, 0.7, 0)
+cdBG.Position = UDim2.new(1.85, 0, -1.99999999, 0)
+cdBG.BackgroundTransparency = 1
+cdBG.Image = "rbxassetid://7928096707"
+cdBG.ImageColor3 = Color3.fromRGB(170, 0, 0)
+cdBG.ZIndex = 3
+cdBG.ImageTransparency = 0.2
+--
+keyImage.Size = UDim2.new(0, 27, 0, 27)
+keyImage.Position = UDim2.new(1.5, 73, -1.109999768, 0)
+keyImage.BackgroundTransparency = 1
+keyImage.Image = "rbxassetid://8185176875"
+keyImage.ZIndex = 4
+--
+keyBg.Size = UDim2.new(0, 30, 0, 30)
+keyBg.Position = UDim2.new(1.5, 72, -1.11999768, 0)
+keyBg.BackgroundTransparency = 1
+keyBg.Image = "rbxassetid://7928096707"
+keyBg.ZIndex = 3
+keyBg.ImageColor3 = Color3.fromRGB(0, 0, 0)
+--
+--
+cdBG.Visible = false
+buttonCD.Visible = false
+
+-- animation
+local spdashanim = Instance.new("Animation")
+spdashanim.AnimationId = "rbxassetid://13165452674"
+local sdanim = animator:LoadAnimation(spdashanim)
+local bounceback = Instance.new("Animation")
+bounceback.AnimationId = "rbxassetid://16233637794"
+local bumping = animator:LoadAnimation(bounceback)
+-- exclusive to wall bumping
+local bumped = Instance.new("Animation")
+bumped.AnimationId = "rbxassetid://13116532412"
+local boink = animator:LoadAnimation(bumped)
+local bam = Instance.new("Animation")
+bam.AnimationId = "rbxassetid://14526473340"
+local bonk = animator:LoadAnimation(bam)
+local getup = Instance.new("Animation")
+getup.AnimationId = "rbxassetid://16195071852"
+local rise = animator:LoadAnimation(getup)
+
+-- code section
+
+-- prevent script cancelling after death
+p.CharacterAdded:Connect(function(newCharacter)
+-- things
+    c = newCharacter
+    h = newCharacter:WaitForChild("Humanoid")
+    hrp = newCharacter:WaitForChild("HumanoidRootPart")
+    animator = h.Animator
+    -- values
+    cdval = 0
+    viscd = 0
+    sdCooldown = false
+    buttonCD.Text = "0"
+-- gui
+    buttonCD.Visible = false -- text
+    cdBG.Visible = false -- text
+    buttonBlood.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    buttonIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    buttonBlood.ImageTransparency = 0.4
+    -- animation
+-- animation
+local spdashanim = Instance.new("Animation")
+spdashanim.AnimationId = "rbxassetid://13165452674"
+local sdanim = animator:LoadAnimation(spdashanim)
+local bounceback = Instance.new("Animation")
+bounceback.AnimationId = "rbxassetid://16233637794"
+local bumping = animator:LoadAnimation(bounceback)
+-- exclusive to wall bumping
+local bumped = Instance.new("Animation")
+bumped.AnimationId = "rbxassetid://13116532412"
+local boink = animator:LoadAnimation(bumped)
+local bam = Instance.new("Animation")
+bam.AnimationId = "rbxassetid://14526473340"
+local bonk = animator:LoadAnimation(bam)
+local getup = Instance.new("Animation")
+getup.AnimationId = "rbxassetid://16195071852"
+local rise = animator:LoadAnimation(getup)
+-- destroy force
+    if hrp:FindFirstChild("spinDashForce") then
+		hrp.spinDashForce:Destroy()
+		sdanim:Stop()
+		spindashactive = false
+	end
+end)
+
+-- bumping
+function bumped()
+	if hrp:FindFirstChild("spinDashForce") then
+		hrp.spinDashForce:Destroy()
+		sdanim:Stop()
+		spindashactive = false
+	end
+    buttonIcon.ImageColor3 = Color3.fromRGB(190, 0, 0)
+	bumping:Play()	
+	boink:Play()	
+	bonk:Play()
+	bonk:AdjustSpeed(1.25)
+	local speed2 = -65
+	local bumpingForce = Instance.new("BodyVelocity", hrp)
+	bumpingForce.MaxForce = Vector3.new(1,0,1) * 30000
+	bumpingForce.Name = "bumpingForce"
+
+	-- Set initial forward velocity
+	bumpingForce.Velocity = hrp.CFrame.LookVector * speed2
+
+	-- curving
+	local bstartTime = tick()
+
+	while tick() - bstartTime < 0.9 do
+		wait(0.12)
+		bumpingForce.Velocity = hrp.CFrame.LookVector * speed2
+		speed2 *= 0.7
+	end
+	-- winding down
+	bumpingForce:Destroy()
+	bumping:Stop()
+	rise:Play()
+end
+
+
+
+local sdKey = Enum.KeyCode.X
+local sdChargeDuration = 0.65
+local sdChargeValue = 0
+local chargeTick = 0
+local sdCharged = false
+
+local ws = h.WalkSpeed
+wait(0.2)
+uis.InputBegan:Connect(function(inputObject, Chatted)
+if Chatted then return end
+	if (inputObject.KeyCode == sdKey) then
+    if sdCooldown == false then
+    -- the halting
+    buttonIcon.ImageColor3 = Color3.fromRGB(251, 216, 0)
+    		sdanim:Play()
+			sdanim:AdjustSpeed(1)
+			speed = 155
+            h.WalkSpeed = 0
+		-- Reset Values
+		sdChargeValue = 0
+		-- Update Starting Tick
+		chargeTick = tick()
+		-- Update Holded Value
+		sdCharged = true
+        end
+		end
+end)
+
+uis.InputEnded:Connect(function(inputObject, Chatted)
+if Chatted then return end
+	if (inputObject.KeyCode == sdKey) and sdCharged then
+		if c and h then
+			if sdCooldown == false then
+			sdCooldown = true
+			buttonCD.Visible = true -- text
+			cdBG.Visible = true -- text
+            buttonBlood.ImageColor3 = Color3.fromRGB(175, 0, 0)
+            buttonBlood.ImageTransparency = 0.65
+			sdCharged = false
+			spindashactive = true
+            h.WalkSpeed = ws
+			if sdChargeValue < 1 and sdChargeValue > 0 then
+				speed = 235
+			elseif sdChargeValue == 1 then
+				speed = 360
+			end
+			x = 0
+			wait(0.1)
+			-- movement
+			local rayParams = RaycastParams.new()
+			rayParams.FilterType = Enum.RaycastFilterType.Exclude
+			rayParams.FilterDescendantsInstances = {game.Players:GetDescendants()}
+			local animspeed = 1.8
+
+			sdanim:Play()
+			sdanim:AdjustSpeed(1)
+			wait(0.1)
+			local spinForce = Instance.new("BodyVelocity")
+			spinForce.MaxForce = Vector3.new(1,0,1) * 30000
+			spinForce.Parent = hrp
+			spinForce.Name = "spinDashForce"
+			-- Set initial forward velocity
+			spinForce.Velocity = hrp.CFrame.LookVector * speed
+			sdanim:AdjustSpeed(animspeed)
+			-- curving
+            buttonIcon.ImageColor3 = Color3.fromRGB(0, 255, 0)
+			local startTime = tick()
+			while tick() - startTime < 2.2 do
+				wait(0.1)
+				spinForce.Velocity = hrp.CFrame.LookVector * speed
+				speed *= 0.87
+				animspeed *= 0.87
+				sdanim:AdjustSpeed(animspeed)
+				local rayOrigin = hrp.Position
+				local rayDirection = (hrp.CFrame.LookVector).Unit * 9
+				local rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+				if rayResult and not rayResult.Instance:IsA("WedgePart") then
+					bumped()
+				end
+			end
+			-- winding down
+			sdanim:Stop()
+			spinForce:Destroy()
+			x = 0
+				
+				-- on cooldown
+				sdCooldown = true
+				if sdChargeValue < 0.5 then
+					cdval = 14
+				elseif sdChargeValue < 1 and sdChargeValue > 0.5 then
+					cdval = 19
+				elseif sdChargeValue == 1 then
+					cdval = 28
+				end
+                viscd = cdval
+
+                local sdcdHandler = tick()
+                while tick() - sdcdHandler < cdval do
+                game:GetService("RunService").Heartbeat:Wait()
+                buttonCD.Visible = true
+                cdBG.Visible = true
+                buttonIcon.ImageColor3 = Color3.fromRGB(190, 0, 0)
+                cdval = cdval - 0.01
+                buttonCD.Text = cdval
+                end
+
+				buttonCD.Visible = false -- text
+                cdBG.Visible = false -- text
+				sdCooldown = false
+                buttonBlood.ImageColor3 = Color3.fromRGB(0, 0, 0)
+                buttonIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+                buttonBlood.ImageTransparency = 0.4
+				cdval = 0
+                buttonCD.Text = "0"
+                h.WalkSpeed = 30
+			end
+		end
+		end
+end)
+
+-- Initialize
+while true do
+	if sdCharged then
+		-- Normalized Value
+		local alpha = ((tick() - chargeTick) / sdChargeDuration)
+		-- Update Charging Value
+		sdChargeValue = math.clamp(alpha, 0, 1)
+		sdanim:AdjustSpeed(math.clamp(alpha, 1.1, 2.5))
+	end
+	task.wait()
+end
